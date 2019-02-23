@@ -5,7 +5,7 @@ if "%~1"=="" (
 	pause
 	exit
 )
-set tempDir=%~dp0\...temp
+set tempDir=%~dp0...temp
 mkdir "%tempDir%"
 set count=0
 for %%a in (%*) do (
@@ -33,9 +33,14 @@ rmdir /s /q "%tempDir%"
 exit
 
 :FILEWORK
-echo Compiling %~1
 set /a count+=1
-javac "%~1" -d "%tempDir%" 2>"%tempDir%\...tempFile"
+if not "%~2"=="" (
+	echo Compiling files in %~1
+	javac @"%~2" -d "%tempDir%" 2>"%tempDir%\...tempFile"
+) else (
+	echo Compiling %~1
+	javac "%~1" -d "%tempDir%" 2>"%tempDir%\...tempFile"
+)
 if not %ERRORLEVEL%==0 (
 	cls
 	type "%tempDir%\...tempFile"
@@ -45,11 +50,14 @@ exit /b 0
 
 :FOLDERLOOP
 for /r %1 %%a in (*.java) do (
-	call :FILEWORK "%%a"
-	if not !ERRORLEVEL!==0 (
-		exit /b 1
-	)
+	set tempVar=%%a
+	echo "!tempVar:\=\\!" >> "%tempDir%\argfile"
 )
+call :FILEWORK %1 "%tempDir%\argfile"
+if not %ERRORLEVEL%==0 (
+	exit /b 1
+)
+del "%tempDir%\argfile"
 exit /b 0
 
 :INPUTLOOP
@@ -61,7 +69,7 @@ if not %dirCount%==0 (
 	set /p package="Name of package: "
 	if defined package (
 		set dPackage=!package:.=\!
-		call :VALIDATE "%tempDir%\!dPackage!" !dPackage!
+		call :VALIDATE "%tempDir%\!dPackage!"
 		if not !ERRORLEVEL!==0 (
 			echo Error: Package not found
 			goto :INPUTLOOP
@@ -77,12 +85,12 @@ if not %ERRORLEVEL%==0 (
 goto :eof
 
 :VALIDATE
-::cannot check for case sensitivity which can cause errors
-(dir /b /a:d "%~dp1"|findstr /x /c:"%~n2") >nul 2>nul
-if not %ERRORLEVEL%==0 (
-	exit /b 1
+for /d %%a in ("%~dp1*") do (
+	if "%%a"=="%~1" (
+		exit /b 0
+	)
 )
-exit /b 0
+exit /b 1
 
 :RUN
 cls
@@ -104,10 +112,10 @@ goto :eof
 :RERUNLOOP
 set /p rerun="Rerun program? (y/n): "
 set result=
-if %rerun%==y set result=true
-if %rerun%==Y set result=true
-if %rerun%==n set result=false
-if %rerun%==N set result=false
+if "%rerun%"=="y" set result=true
+if "%rerun%"=="Y" set result=true
+if "%rerun%"=="n" set result=false
+if "%rerun%"=="N" set result=false
 if not defined result (
 	echo Error: Invalid input
 	goto :RERUNLOOP
