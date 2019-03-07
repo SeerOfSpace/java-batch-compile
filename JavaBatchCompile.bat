@@ -34,13 +34,16 @@ exit
 
 :FILEWORK
 set /a count+=1
+setlocal
+set var=%~1
 if not "%~2"=="" (
-	echo Compiling files in %~1
+	echo Compiling files in !var!
 	javac @"%~2" -d "%tempDir%" 2>"%tempDir%\...tempFile"
 ) else (
-	echo Compiling %~1
+	echo Compiling !var!
 	javac "%~1" -d "%tempDir%" 2>"%tempDir%\...tempFile"
 )
+endlocal
 if not %ERRORLEVEL%==0 (
 	cls
 	type "%tempDir%\...tempFile"
