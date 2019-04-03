@@ -113,8 +113,9 @@ if %ERRORLEVEL%==0 (
 goto :eof
 
 :RERUNLOOP
-set /p rerun="Rerun program? (y/n): "
+set rerun=
 set result=
+set /p rerun="Rerun program? (y/n): "
 if "%rerun%"=="y" set result=true
 if "%rerun%"=="Y" set result=true
 if "%rerun%"=="n" set result=false
